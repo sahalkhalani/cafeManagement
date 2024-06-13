@@ -43,4 +43,27 @@ router.patch("/update", auth.authenticate, role.checkRole, (req, res, next) => {
   });
 });
 
+router.delete("/delete/:id", auth.authenticate, role.checkRole, async (req, res, next)=>{
+  const id=req.params.id;
+  await connection.promise().beginTransaction();
+  try{
+    const deleteCategoryQuery = `delete from category where id=${id}`;
+    connection.promise().query(deleteCategoryQuery).then(result => {
+      const deleteProductsQuery = `delete from product where categoryID=${id}`;
+      return connection.promise().query(deleteProductsQuery);
+    }).then(async details => {
+      await connection.promise().commit();
+      return res
+        .status(200)
+        .json({ message: "Category deleted successfully" });
+    })
+  }catch(e) {
+    await connection.promise().rollback();
+    
+    console.log(`ROLLBACK ERROR >> ${e}`)
+    return res.status(500).json({ e });
+
+  }
+})
+
 module.exports = router;

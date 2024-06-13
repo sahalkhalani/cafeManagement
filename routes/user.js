@@ -127,7 +127,7 @@ router.post("/forgotPassword", (req, res) => {
 });
 
 router.get("/get", auth.authenticate, role.checkRole, (req, res) => {
-  let query = 'select id,name,email,phone,status from user where role="user"';
+  let query = 'select id,name,email,phone, bonus, status from user';
 
   connection.query(query, (err, results) => {
     if (!err) {
@@ -137,6 +137,45 @@ router.get("/get", auth.authenticate, role.checkRole, (req, res) => {
     }
   });
 });
+
+router.get("/bonus", auth.authenticate, role.checkRole, async (req, res) => {
+  const query = `SELECT createdBy, SUM(total) as total FROM bill where total >= 100 AND bonusCalculated=0 GROUP BY createdBy;`
+  let details = []
+  await connection.promise().query(query).then(data => {
+    details = data[0];
+    console.log(`DATA >> ${details}`)
+  })
+  console.log(`DETAILS >> ${details}`)
+
+  if(details.length==0){
+    return res.status(200).json({ message: "No Pending Bonus"})
+  }
+  
+  let updateQuery = ""
+  let idString = "";
+  details.forEach(empDetail => {
+    updateQuery = updateQuery + `when email='${empDetail.createdBy}' then bonus+${empDetail.total/10} `;
+    idString = idString + `'${empDetail.createdBy}',`
+  })
+
+  let finalQuery = `UPDATE user SET bonus = ( CASE ${updateQuery} END) WHERE email in (${idString.slice(0, -1)});`
+  console.log(`FINAL QUERY >> ${finalQuery}`)
+  await connection.promise().beginTransaction();
+  try{
+    connection.promise().query(finalQuery).then(data => {
+      console.log(`BONUS DATA >> ${JSON.stringify(data)}`)
+      const theQuery = `UPDATE bill SET bonusCalculated=1 WHERE bonusCalculated=0;`
+      return connection.promise().query(theQuery)
+    }).then(async details => {
+      await connection.promise().commit();
+    })
+  } catch(err) {
+    await connection.promise().rollback();
+    return res.status(500).json({ err });
+  }
+
+  return res.status(200).json({ message: "bonus has been imbursed"})
+})
 
 router.patch("/update", auth.authenticate, role.checkRole, (req, res) => {
   let user = req.body;

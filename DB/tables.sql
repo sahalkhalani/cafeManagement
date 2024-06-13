@@ -51,6 +51,24 @@
 --     primary key(id)
 -- );
 
+
+-- BILLS
+SELECT * from bill
+-- SELECT createdBy, SUM(total) FROM bill where total > 100 GROUP BY createdBy ;
+
+
+-- PRODUCTS 
+
 -- ALTER TABLE product ADD COLUMN stockQuantity int DEFAULT 0;
 
-SELECT * from product
+-- UPDATE product SET stockQuantity = (CASE when id = 1 then stockQuantity-1
+-- 										 when id = 2 then stockQuantity-2
+-- 									END)
+--                                     WHERE id in (1,2,3);
+
+-- SELECT * from product;
+
+-- USER TABLE
+-- UPDATE user SET name = 'Staff1', email='staff1@mailinator.com', password='staff1@1234' WHERE id='2';
+-- ALTER TABLE user ADD COLUMN bonus int DEFAULT 0;
+-- SELECT * from user;

@@ -85,8 +85,8 @@ router.post("/generateReport", auth.authenticate, async (req, res) => {
   catch (e){
     await connection.promise().rollback();
     
-    return res.status(500).json({ err });
     console.log(`ROLLBACK ERROR >> ${e}`)
+    return res.status(500).json({ e });
   }
 
 
