@@ -9,6 +9,20 @@
 --     UNIQUE (email)
 -- );
 
+-- create table information(
+-- 	id int primary key AUTO_INCREMENT,
+-- 	revenue int);
+
+-- CREATE TABLE payment_history (
+-- 	id int primary key AUTO_INCREMENT,
+--     emp_id INT,
+--     payment_date DATE,
+--     payment_amount INT,
+--     FOREIGN KEY (emp_id) REFERENCES user(id)
+-- );
+
+select * from payment_history;
+
 -- insert into
 --     user(name, phone, email, password, status, role)
 -- values
@@ -72,8 +86,6 @@ SELECT * from bill ;
 -- ALTER TABLE user ADD COLUMN bonus int DEFAULT 0;
 -- SELECT * from user;
 
-
-
 -- LOW STOCK TRIGGER 
 -- DELIMITER //
 -- CREATE TRIGGER low_stock_trigger
@@ -81,12 +93,39 @@ SELECT * from bill ;
 -- FOR EACH ROW
 -- BEGIN
 --     SET @productName = NEW.name;
---     SET @notificationString = CONCAT(@productName, \' needs to be restocked\');
+--     SET @notificationString = CONCAT(@productName, ' needs to be restocked');
 --     IF NEW.stockQuantity < 10 THEN
 --         INSERT INTO notifications (notificationMsg) VALUES (@notificationString);
 --     END IF;
 -- END;
--- //
 -- DELIMITER;
+-- SHOW TRIGGERS;
+
+-- BONUS TRIGGER 
+DELIMITER //
+CREATE TRIGGER pay_the_bonus_trigger
+AFTER UPDATE ON user
+FOR EACH ROW
+BEGIN
+    -- SET @productName = NEW.name;
+    IF NEW.bonus >= 500 THEN
+        INSERT INTO payment_history (emp_id, payment_date, payment_amount) VALUES (NEW.id, CURRENT_DATE, NEW.bonus);
+    END IF;
+END;
+DELIMITER;
 
 SHOW TRIGGERS;
+
+-- DROP TRIGGER pay_the_bonus_trigger;
+
+select * from payment_history;
+
+select * from notifications;
+
+select * from bill;
+select * from user;
+select * from information;
+
+
+
+

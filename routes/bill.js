@@ -192,27 +192,35 @@ router.post("/getPDF", auth.authenticate, (req, res) => {
 router.get("/getBills", auth.authenticate, (req, res, next) => {
   let query = "select * from bill order by id DESC";
   connection.query(query, (err, results) => {
+    let revenue = 0;
     if (!err) {
-      return res.status(200).json({ data: results });
+      connection.query("select revenue from information", (err, result) => {
+        revenue = result[0].revenue;
+        return res.status(200).json({ data: results, revenue: revenue });
+      })
     } else {
       return res.status(500).json({ err });
     }
   });
 });
 
-router.delete("/delete/:id", auth.authenticate, (req, res, next) => {
+router.delete("/delete/:id", auth.authenticate, async (req, res, next) => {
   const id = req.params.id;
-  let query = "delete from bill where id=?";
-  connection.query(query, [id], (err, results) => {
-    if (!err) {
-      if (results.affectedRows == 0) {
-        return res.status(404).json({ message: "Bill ID not found" });
-      }
+  let query = `UPDATE information SET revenue = revenue + (SELECT SUM(total) FROM bill where id=${id});`;
+  let deleteQuery = `delete from bill where id=${id}`;
+
+  await connection.promise().beginTransaction();
+  try{
+    await connection.promise().query(query).then(data => {
+      return connection.promise().query(deleteQuery)
+    }).then(async details => {
+      await connection.promise().commit();})
       return res.status(200).json({ message: "Bill deleted successfully" });
-    } else {
-      return res.status(500).json({ err });
-    }
-  });
+  } catch(err) {
+    await connection.promise().rollback();
+    return res.status(500).json({ err });
+  }
+
 });
 
 module.exports = router;
