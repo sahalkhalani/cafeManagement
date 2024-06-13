@@ -53,8 +53,8 @@
 
 
 -- BILLS
-SELECT * from bill
--- SELECT createdBy, SUM(total) FROM bill where total > 100 GROUP BY createdBy ;
+SELECT * from bill ;
+-- SELECT createdBy, SUM(total) as total FROM bill where total > 100 AND bonusCalculated=0 GROUP BY createdBy;
 
 
 -- PRODUCTS 
@@ -69,6 +69,24 @@ SELECT * from bill
 -- SELECT * from product;
 
 -- USER TABLE
--- UPDATE user SET name = 'Staff1', email='staff1@mailinator.com', password='staff1@1234' WHERE id='2';
 -- ALTER TABLE user ADD COLUMN bonus int DEFAULT 0;
 -- SELECT * from user;
+
+
+
+-- LOW STOCK TRIGGER 
+-- DELIMITER //
+-- CREATE TRIGGER low_stock_trigger
+-- AFTER UPDATE ON product
+-- FOR EACH ROW
+-- BEGIN
+--     SET @productName = NEW.name;
+--     SET @notificationString = CONCAT(@productName, \' needs to be restocked\');
+--     IF NEW.stockQuantity < 10 THEN
+--         INSERT INTO notifications (notificationMsg) VALUES (@notificationString);
+--     END IF;
+-- END;
+-- //
+-- DELIMITER;
+
+SHOW TRIGGERS;
